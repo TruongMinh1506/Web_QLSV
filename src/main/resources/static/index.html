@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <script>
+      const savedTheme = localStorage.getItem("theme") || "light";
+      document.documentElement.setAttribute("data-theme", savedTheme);
+    </script>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div class="shell">
+    <aside class="sidebar">
+        <div>
+            <div class="brand">
+                <div class="brand-mark">S</div>
+                <div>
+                    <h1>Student</h1>
+                </div>
+            </div>
+            <nav class="menu" aria-label="Điều hướng chính">
+                <button class="menu-item active" type="button" data-section="dashboard" data-roles="ADMIN,TEACHER">Dashboard</button>
+                <button class="menu-item" type="button" data-section="students" data-roles="ADMIN,TEACHER">Sinh viên</button>
+                <button class="menu-item" type="button" data-section="stats" data-roles="ADMIN,TEACHER">Thống kê</button>
+                <button class="menu-item hidden" type="button" data-section="profile" data-roles="STUDENT">Hồ sơ</button>
+                <button class="menu-item hidden" type="button" data-section="logs" data-roles="ADMIN">Nhật ký</button>
+            </nav>
+        </div>
+
+     </aside>
+
+    <main class="content">
+        <section class="card topbar">
+            <div>
+                <p id="pageEyebrow" class="eyebrow">Hệ thống quản lý sinh viên</p>
+                <h2 id="pageTitle">Student Dashboard</h2>
+                <p id="pageSubtitle" class="subtitle">Phân quyền theo vai trò và theo dõi lịch sử thao tác trong cùng một hệ thống.</p>
+            </div>
+            <div class="user-profile-container">
+                <button id="userProfileToggle" class="user-profile-toggle" type="button" title="Tùy chọn tài khoản">
+                    <strong id="currentUserName">Đang tải...</strong>
+                    <span id="currentUserRoleBadge" class="pill">Student</span>
+                    <span class="theme-icon" id="themeIcon">🌙</span>
+                </button>
+
+                <div id="userDropdown" class="user-dropdown hidden">
+                    <div class="user-dropdown-header">
+                        <strong id="dropdownUserName">Đang tải...</strong>
+                        <span id="dropdownUserRole">Phiên làm việc</span>
+                    </div>
+                    <div class="user-dropdown-divider"></div>
+                    <button id="changePasswordBtn" class="user-dropdown-item" type="button">🔑 Đổi mật khẩu</button>
+                    <button id="themeToggleBtn" class="user-dropdown-item" type="button">
+                        <span id="themeIconDropdown">🌙</span> Chế độ giao diện
+                    </button>
+                    <div class="user-dropdown-divider"></div>
+                    <button id="logoutBtn" class="user-dropdown-item user-dropdown-item--danger" type="button">↪️ Đăng xuất</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="dashboardSection" class="card nav-section" data-nav="dashboard" data-roles="ADMIN,TEACHER">
+        </section>
+
+        <section id="metricsSection" class="dashboard-metrics" data-roles="ADMIN,TEACHER">
+            <div class="metrics-top-row">
+                <article class="metric card metric-main">
+                    <span class="metric-label">Tổng sinh viên</span>
+                    <strong id="totalStudents">0</strong>
+                    <small>Số lượng hiện có trong hệ thống</small>
+                </article>
+
+                <article class="card academic-summary">
+                    <div class="panel-head">
+                        <div>
+                            <p class="eyebrow">Tỉ lệ học lực</p>
+                            <h3>Phân bố theo GPA</h3>
+                        </div>
+                    </div>
+                    <div id="academicBarChart" class="bar-chart"></div>
+                </article>
+            </div>
+
+            <div class="metrics-bottom-row">
+                <article class="metric card gpa-highlight-high">
+                    <span class="metric-label">Sinh viên GPA cao nhất</span>
+                    <strong id="highestGpaStudent">--</strong>
+                    <small id="highestGpaStudentSub"></small>
+                    <div class="gpa-value" id="highestGpaValue">--</div>
+                </article>
+                <article class="metric card gpa-highlight-low">
+                    <span class="metric-label">Sinh viên GPA thấp nhất</span>
+                    <strong id="lowestGpaStudent">--</strong>
+                    <small id="lowestGpaStudentSub"></small>
+                    <div class="gpa-value" id="lowestGpaValue">--</div>
+                </article>
+            </div>
+        </section>
+
+        <section id="studentsSection" class="card panel nav-section" data-nav="students" data-roles="ADMIN,TEACHER">
+            <div class="panel-head">
+                <div>
+                    <p class="eyebrow">Danh sách sinh viên</p>
+                    <h3>Bảng dữ liệu</h3>
+                </div>
+                <span id="resultCount" class="pill">0 kết quả</span>
+            </div>
+
+            <div class="toolbar">
+                <div class="search-box">
+                    <input id="keywordInput" type="text" placeholder="Tìm theo mã, tên, lớp, khoa...">
+                    <button id="searchBtn" type="button">Tìm</button>
+                </div>
+
+                <button id="filterToggleBtn" class="filter-toggle-btn" type="button" aria-label="Bộ lọc">
+                    <span>🔍</span> Bộ lọc
+                </button>
+
+                <div id="advancedFilterDropdown" class="advanced-filter-dropdown hidden">
+                    <div class="filter-group">
+                        <label for="facultyFilterMobile">Khoa</label>
+                        <select id="facultyFilterMobile" class="filter-select"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="majorFilterMobile">Chuyên ngành</label>
+                        <select id="majorFilterMobile" class="filter-select"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="classNameFilterMobile">Lớp</label>
+                        <select id="classNameFilterMobile" class="filter-select"></select>
+                    </div>
+                    <div class="filter-actions">
+                        <button id="applyFilterBtn" class="primary-btn" type="button">Áp dụng</button>
+                        <button id="clearFiltersBtnMobile" class="secondary-btn" type="button">Xóa</button>
+                    </div>
+                </div>
+
+                <div class="desktop-filters">
+                    <select id="facultyFilter" class="filter-select">
+                        <option value="">Tất cả khoa</option>
+                    </select>
+                    <select id="majorFilter" class="filter-select">
+                        <option value="">Tất cả chuyên ngành</option>
+                    </select>
+                    <select id="classNameFilter" class="filter-select">
+                        <option value="">Tất cả lớp</option>
+                    </select>
+                    <button id="clearFiltersBtn" class="secondary-btn" type="button">Xóa bộ lọc</button>
+                </div>
+
+                <button id="exportCsvBtn" class="secondary-btn" type="button">📥 Export CSV</button>
+                <button id="openCreateBtn" class="primary-btn" type="button">+ Thêm mới</button>
+            </div>
+
+            <div id="bulkActionsBar" class="bulk-actions-bar hidden">
+                <span id="bulkCount">0 đã chọn</span>
+                <div class="bulk-actions-group">
+                    <button id="clearSelectionBtn" class="secondary-btn" type="button">Bỏ chọn</button>
+                    <button id="bulkDeleteBtn" class="danger-btn" type="button">Xóa đã chọn</button>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead id="studentTableHead"></thead>
+                    <tbody id="studentTableBody"></tbody>
+                </table>
+                <div id="emptyState" class="empty-state hidden">
+                    <h4>Chưa có dữ liệu phù hợp</h4>
+                    <p>Thử tìm bằng từ khóa khác hoặc thêm sinh viên mới.</p>
+                </div>
+            </div>
+
+            <div id="paginationBar" class="pagination-bar hidden">
+                <span id="paginationInfo" class="pagination-info"></span>
+                <nav id="paginationNav" class="pagination-nav"></nav>
+            </div>
+        </section>
+
+        <section id="statsSection" class="charts-grid nav-section" data-nav="stats" data-roles="ADMIN,TEACHER">
+            <article class="card chart-card">
+                <div class="panel-head">
+                    <div>
+                        <p class="eyebrow">Tỉ lệ trạng thái</p>
+                        <h3>Phân bổ trạng thái</h3>
+                    </div>
+                </div>
+                <div id="statusChart" class="donut-chart"></div>
+                <div id="statusLegend" class="legend"></div>
+            </article>
+
+            <article class="card chart-card">
+                <div class="panel-head">
+                    <div>
+                        <p class="eyebrow">Số lượng theo khoa</p>
+                        <h3>Thống kê phòng ban</h3>
+                    </div>
+                </div>
+                <div id="facultyChart" class="bar-chart"></div>
+            </article>
+        </section>
+
+        <section id="profileSection" class="card panel nav-section hidden" data-nav="profile" data-roles="STUDENT">
+            <div class="panel-head">
+                <div>
+                    <p class="eyebrow">Tài khoản sinh viên</p>
+                    <h3>Thông tin cá nhân</h3>
+                </div>
+                <span class="pill">Student</span>
+            </div>
+            <div id="profileGrid" class="profile-grid"></div>
+        </section>
+
+        <section id="logsSection" class="card panel nav-section hidden" data-nav="logs" data-roles="ADMIN">
+            <div class="panel-head">
+                <div>
+                    <p class="eyebrow">Minh bạch thao tác</p>
+                    <h3>Nhật ký hoạt động</h3>
+                </div>
+                <span id="logCount" class="pill">0 bản ghi</span>
+            </div>
+
+            <div class="table-wrap">
+                <table class="logs-table">
+                    <thead>
+                    <tr>
+                        <th>Thời gian</th>
+                        <th>Tài khoản</th>
+                        <th>Vai trò</th>
+                        <th>Hành động</th>
+                        <th>Đối tượng</th>
+                        <th>Mô tả</th>
+                    </tr>
+                    </thead>
+                    <tbody id="logTableBody"></tbody>
+                </table>
+                <div id="logEmptyState" class="empty-state hidden">
+                    <h4>Chưa có bản ghi nào</h4>
+                    <p>Nhật ký sẽ xuất hiện khi người dùng đăng nhập hoặc thay đổi dữ liệu.</p>
+                </div>
+            </div>
+
+            <div id="logPaginationBar" class="pagination-bar hidden">
+                <span id="logPaginationInfo" class="pagination-info"></span>
+                <nav id="logPaginationNav" class="pagination-nav"></nav>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div id="studentModal" class="modal hidden">
+    <div class="modal-card">
+        <div class="modal-head">
+            <div>
+                <p class="eyebrow">Thông tin sinh viên</p>
+                <h3 id="modalTitle">Thêm sinh viên</h3>
+            </div>
+            <button id="closeModalBtn" class="icon-btn" type="button">x</button>
+        </div>
+
+        <form id="studentForm" class="form-grid">
+            <input id="studentId" type="hidden">
+            <label><span>Mã sinh viên</span><input id="studentCode" type="text" maxlength="20" required></label>
+            <label><span>Họ tên</span><input id="fullName" type="text" maxlength="120" required></label>
+            <label><span>Ngày sinh</span><input id="dateOfBirth" type="date" required></label>
+            <label><span>Lớp</span><input id="className" type="text" maxlength="30" required></label>
+            <label><span>Chuyên ngành</span><input id="major" type="text" maxlength="80" required></label>
+            <label><span>Khoa</span><input id="faculty" type="text" maxlength="80" required></label>
+            <label><span>GPA</span><input id="gpa" type="number" step="0.01" min="0" max="10" required></label>
+            <label>
+                <span>Trạng thái</span>
+                <select id="status" required>
+                    <option value="Đang học">Đang học</option>
+                    <option value="Bảo lưu">Bảo lưu</option>
+                    <option value="Tốt nghiệp">Tốt nghiệp</option>
+                    <option value="Thôi học">Thôi học</option>
+                </select>
+            </label>
+            <div class="form-actions">
+                <button id="cancelBtn" class="secondary-btn" type="button">Hủy</button>
+                <button class="primary-btn" type="submit">Lưu sinh viên</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="confirmModal" class="modal hidden">
+    <div class="modal-card confirm-card">
+        <p class="eyebrow">Xác nhận thao tác</p>
+        <h3 id="confirmModalTitle">Xóa sinh viên này?</h3>
+        <p class="subtitle" id="confirmModalDesc">Dữ liệu sẽ bị xóa khỏi hệ thống. Bạn có thể tiếp tục nếu chắc chắn.</p>
+        <div class="form-actions">
+            <button id="cancelDeleteBtn" class="secondary-btn" type="button">Không</button>
+            <button id="confirmDeleteBtn" class="danger-btn" type="button">Xóa</button>
+        </div>
+    </div>
+</div>
+
+<div id="detailModal" class="modal hidden">
+    <div class="modal-card detail-card">
+        <div class="modal-head">
+            <div>
+                <p class="eyebrow">Chi tiết sinh viên</p>
+                <h3 id="detailTitle">Thông tin</h3>
+            </div>
+            <button id="closeDetailBtn" class="icon-btn" type="button">x</button>
+        </div>
+
+        <div class="detail-body">
+            <div class="detail-avatar">
+                <div class="avatar-placeholder" id="detailAvatar"></div>
+            </div>
+
+            <div class="detail-grid">
+                <div class="detail-stat">
+                    <span class="detail-label">Mã sinh viên</span>
+                    <strong id="detailStudentCode">--</strong>
+                </div>
+                <div class="detail-stat">
+                    <span class="detail-label">Họ tên</span>
+                    <strong id="detailFullName">--</strong>
+                </div>
+                <div class="detail-stat">
+                    <span class="detail-label">Ngày sinh</span>
+                    <strong id="detailDateOfBirth">--</strong>
+                </div>
+                <div class="detail-stat">
+                    <span class="detail-label">Lớp</span>
+                    <strong id="detailClassName">--</strong>
+                </div>
+                <div class="detail-stat">
+                    <span class="detail-label">Chuyên ngành</span>
+                    <strong id="detailMajor">--</strong>
+                </div>
+                <div class="detail-stat">
+                    <span class="detail-label">Khoa</span>
+                    <strong id="detailFaculty">--</strong>
+                </div>
+                <div class="detail-stat">
+                    <span class="detail-label">GPA</span>
+                    <strong id="detailGpa"><span class="gpa-badge" id="detailGpaBadge">--</span></strong>
+                </div>
+                <div class="detail-stat">
+                    <span class="detail-label">Trạng thái</span>
+                    <strong id="detailStatus"><span class="status" id="detailStatusBadge">--</span></strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button id="cancelDetailBtn" class="secondary-btn" type="button">Đóng</button>
+            <button id="editFromDetailBtn" class="primary-btn" type="button">✏️ Chỉnh sửa</button>
+        </div>
+    </div>
+</div>
+
+<div id="passwordModal" class="modal hidden">
+    <div class="modal-card confirm-card">
+        <div class="modal-head">
+            <div>
+                <p class="eyebrow">Bảo mật tài khoản</p>
+                <h3>Đổi mật khẩu</h3>
+            </div>
+            <button id="closePasswordModalBtn" class="icon-btn" type="button">x</button>
+        </div>
+
+        <form id="passwordForm" class="form-grid">
+            <div class="form-actions" style="grid-column: 1 / -1; justify-content: flex-start; padding: 0; margin-bottom: 12px;">
+                <span class="auth-error" id="passwordError"></span>
+            </div>
+            <label><span>Mật khẩu hiện tại</span><input id="currentPassword" type="password" placeholder="Nhập mật khẩu hiện tại" required></label>
+            <label><span>Mật khẩu mới</span><input id="newPassword" type="password" placeholder="Nhập mật khẩu mới" required></label>
+            <label><span>Xác nhận mật khẩu mới</span><input id="confirmPassword" type="password" placeholder="Nhập lại mật khẩu mới" required></label>
+            <div class="form-actions">
+                <button id="cancelPasswordBtn" class="secondary-btn" type="button">Hủy</button>
+                <button class="primary-btn" type="submit">Lưu thay đổi</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
